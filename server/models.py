@@ -6,12 +6,11 @@ metadata = MetaData(naming_convention={
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
 })
 
-db = SQLAlchemy(metadata=metadata)
 
-class Bakery(db.Model, SerializerMixin):
+db = SQLAlchemy()
+
+class Bakery(db.Model):
     __tablename__ = 'bakeries'
-
-    serialize_rules = ('-baked_goods.bakery',)
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True)
@@ -23,10 +22,17 @@ class Bakery(db.Model, SerializerMixin):
     def __repr__(self):
         return f'<Bakery {self.name}>'
 
-class BakedGood(db.Model, SerializerMixin):
-    __tablename__ = 'baked_goods'
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "baked_goods": [baked_good.to_dict() for baked_good in self.baked_goods]
+        }
 
-    serialize_rules = ('-bakery.baked_goods',)
+class BakedGood(db.Model):
+    __tablename__ = 'baked_goods'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True)
@@ -38,3 +44,13 @@ class BakedGood(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f'<Baked Good {self.name}, ${self.price}>'
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "price": self.price,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "bakery_id": self.bakery_id
+        }
